@@ -1,7 +1,7 @@
 import uuid
 from datetime import timezone, datetime
 
-from sqlalchemy import Column, DateTime, String, ForeignKey, text, select
+from sqlalchemy import Column, DateTime, String, ForeignKey, text
 from sqlalchemy.orm import Session, relationship
 
 from src.database import Base
@@ -20,7 +20,6 @@ class Employee(Base):
     team_id = Column(String, ForeignKey("team.id"), nullable=False)
 
     team = relationship("Team", foreign_keys=[team_id])
-    #team = relationship("Team", back_populates="employees", foreign_keys=[team_id])
 
 
 class EmployeeService:
@@ -44,8 +43,8 @@ class EmployeeService:
         return self.session.query(self.model).all()
 
     def read_all_by_team_id(self, team_id):
-        # Returns ORM objects instead of raw db tuples
-        return self.session.scalars(select(self.model).where(self.model.team_id == team_id)).all()
+        query = f"SELECT * FROM {self.model.__tablename__} WHERE team_id = '{team_id}';"
+        return self.session.execute(text(query)).fetchall()
 
     def update(self):
         pass

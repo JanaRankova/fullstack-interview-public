@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from pydantic import BaseModel, Field, ConfigDict, List
+from pydantic import BaseModel, Field, ConfigDict
 from starlette import status
+from typing import List
 
 from src.dependencies import (
     team_service_factory,
@@ -11,7 +12,7 @@ from src.dependencies import (
 from src.models.employee import EmployeeService
 from src.models.team import TeamService
 
-#from .employees import EmployeeResponseSchema
+from .employees import EmployeeResponseSchema
 
 
 class TeamBaseSchema(BaseModel):
@@ -21,15 +22,15 @@ class TeamBaseSchema(BaseModel):
 class TeamResponseSchema(TeamBaseSchema):
     id: str
     parent_team_id: str | None
-    #employees: List[EmployeeResponseSchema] = []
-    #child_teams: List["TeamResponseSchema"] = []
+
+class TeamResponseWithEmployeesSchema(TeamResponseSchema):
+    child_teams: list["TeamResponseWithEmployeesSchema"] = []
+    employees: list[EmployeeResponseSchema] = []
 
     model_config = ConfigDict(from_attributes=True)
 
 class TeamCreateSchema(TeamBaseSchema):
     parent_team_id: str | None = Field(default=None)
-
-#TeamResponseSchema.update_forward_refs()
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
 
@@ -38,34 +39,13 @@ router = APIRouter(prefix="/teams", tags=["Teams"])
     "",
     dependencies=[Depends(verify_token)],
     operation_id="list_teams",
-    response_model=list[TeamResponseSchema],
+    response_model=list[TeamResponseWithEmployeesSchema],
 )
 async def list_teams(
     team_service: TeamService = Depends(team_service_factory),
     employee_service: EmployeeService = Depends(employee_service_factory),
 ):
-    return team_service.read_all()
-    # return [
-    #     dict(team._mapping) | {"employees": employee_service.read_all_by_team_id(team.id)}
-    #     for team in teams
-    # ]
-
-# @router.get(
-#     "",
-#     dependencies=[Depends(verify_token)],
-#     operation_id="list_teams",
-#     response_model=list[TeamResponseSchema],
-# )
-# async def list_teams(
-#     team_service: TeamService = Depends(team_service_factory),
-#     employee_service: EmployeeService = Depends(employee_service_factory),
-# ):
-#     return team_service.read_all()
-#     return team_service.read_all_with_children_and_employees()
-#     # return [
-#     #     dict(team._mapping) | {"employees": employee_service.read_all_by_team_id(team.id)}
-#     #     for team in teams
-#     # ]
+    return team_service.read_all_with_children_and_employees(employee_service)
 
 
 @router.post(

@@ -21,29 +21,32 @@ interface Props {
 
 }
 
-const Loading = () => {
-	return <div className="loading">Data is loading...</div>
+interface Employee {
+	id: string
+	name: string
+	surname: string
+	position: string // add all positions available
+	team_id: string
+	created_at: Date
+	end_date: Date | null
 }
+
+interface Team {
+	id: string
+	name: string
+	parent_team_id: string | null
+	child_teams: Team[]
+	employees: Employee[]
+}
+
 
 export default function Test({
 
 }: Props) {
 	const [teams, setTeams] = useState([])
-	const [ employees, setEmployees] = useState([])
 
 	useEffect(() => {
     fetch('http://localhost:8000/teams', {
-		headers: {
-			Authorization: 'Bearer mysecrettoken123',
-		}
-	 })
-      .then((res) => res.json())
-      .then((data) => setTeams(data))
-      .catch((err) => console.error(err));
-  }, [])
-
-  useEffect(() => {
-    fetch('http://localhost:8000/employees', {
 		headers: {
 			Authorization: 'Bearer mysecrettoken123',
 		}
@@ -59,7 +62,6 @@ export default function Test({
 	return (
 	<div>
 		<h2>Teams</h2>
-		<TeamAdd teams={teams}/>
 	</div>
 	)
 }

@@ -1,7 +1,7 @@
 import uuid
 
-from sqlalchemy import Column, String, ForeignKey, text
-from sqlalchemy.orm import Session, relationship, selectinload, select
+from sqlalchemy import Column, String, ForeignKey, text, select
+from sqlalchemy.orm import Session, relationship
 
 from src.database import Base
 
@@ -12,10 +12,8 @@ class Team(Base):
     id = Column(String, primary_key=True, default=str(uuid.uuid4))
     name = Column(String, nullable=False)
     parent_team_id = Column(String, ForeignKey("team.id"), nullable=True)
-    parent_team = relationship("Team", foreign_keys=[parent_team_id])
-    # parent_team = relationship("Team", remote_side=[id], back_populates="child_teams")
-    # child_teams = relationship("Team", back_populates="parent_team", cascade="all, delete-orphan")
-    # employees = relationship("Employee", back_populates="team")
+    parent_team = relationship("Team", remote_side=[id], back_populates="child_teams")
+    child_teams = relationship("Team", back_populates="parent_team", cascade="all, delete-orphan")
 
 
 class TeamService:
@@ -35,21 +33,35 @@ class TeamService:
         return self.session.execute(text(query)).fetchone()
 
     def read_all(self):
-        # query = f"SELECT * FROM {self.model.__tablename__}"
-        # return self.session.execute(text(query)).fetchall()
-        return self.session.query(self.model).all()
+        query = select(self.model)
+        return self.session.scalars(query).all()
 
-    def read_all_with_children_and_employees(self):
-        getChildrenAndEmployees = (
-            select(self.model)
-            .options(
-                # Eager loads
-                selectinload(self.model.child_teams),
-                selectinload(self.model.employees)
-            )
-            .where(self.model.parent_team_id == None)
-        )
-        return self.session.scalars(getChildrenAndEmployees).all()
+    def read_all_with_children_and_employees(self, employee_service):
+        teams = self.read_all()
+        employees = employee_service.read_all()
+
+        team_map = {team.id: team for team in teams}
+
+        for team in teams:
+            team.child_teams = []
+            team.employees = []
+
+        for employee in employees:
+            team = team_map.get(employee.team_id)
+            if team:
+                team.employees.append(employee)
+
+        root_teams = []
+        # Creating tree structure in teams
+        for team in teams:
+            if team.parent_team_id:
+                parent = team_map.get(team.parent_team_id)
+                if parent:
+                    parent.child_teams.append(team)
+            else:
+                root_teams.append(team)
+
+        return root_teams
 
     def update(self):
         pass
