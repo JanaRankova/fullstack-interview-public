@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, List
 from starlette import status
 
 from src.dependencies import (
@@ -11,6 +11,8 @@ from src.dependencies import (
 from src.models.employee import EmployeeService
 from src.models.team import TeamService
 
+#from .employees import EmployeeResponseSchema
+
 
 class TeamBaseSchema(BaseModel):
     name: str
@@ -18,11 +20,16 @@ class TeamBaseSchema(BaseModel):
 
 class TeamResponseSchema(TeamBaseSchema):
     id: str
+    parent_team_id: str | None
+    #employees: List[EmployeeResponseSchema] = []
+    #child_teams: List["TeamResponseSchema"] = []
 
+    model_config = ConfigDict(from_attributes=True)
 
 class TeamCreateSchema(TeamBaseSchema):
     parent_team_id: str | None = Field(default=None)
 
+#TeamResponseSchema.update_forward_refs()
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
 
@@ -37,11 +44,28 @@ async def list_teams(
     team_service: TeamService = Depends(team_service_factory),
     employee_service: EmployeeService = Depends(employee_service_factory),
 ):
-    teams = team_service.read_all()
-    return [
-        dict(team._mapping) | {"employees": employee_service.read_all_by_team_id(team.id)}
-        for team in teams
-    ]
+    return team_service.read_all()
+    # return [
+    #     dict(team._mapping) | {"employees": employee_service.read_all_by_team_id(team.id)}
+    #     for team in teams
+    # ]
+
+# @router.get(
+#     "",
+#     dependencies=[Depends(verify_token)],
+#     operation_id="list_teams",
+#     response_model=list[TeamResponseSchema],
+# )
+# async def list_teams(
+#     team_service: TeamService = Depends(team_service_factory),
+#     employee_service: EmployeeService = Depends(employee_service_factory),
+# ):
+#     return team_service.read_all()
+#     return team_service.read_all_with_children_and_employees()
+#     # return [
+#     #     dict(team._mapping) | {"employees": employee_service.read_all_by_team_id(team.id)}
+#     #     for team in teams
+#     # ]
 
 
 @router.post(

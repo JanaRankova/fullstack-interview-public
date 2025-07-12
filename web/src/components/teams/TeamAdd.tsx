@@ -22,11 +22,16 @@ const schema = yup.object().shape({
   parentTeam: yup.string(),
 });
 
-export const TeamAdd = (
-  {
-    /* teams */
-  }
-) => {
+interface Props {
+  teams: {
+    id: string
+    name: string
+  }[]
+}
+
+export const TeamAdd = ({
+  teams,
+}: Props) => {
   const [formError, setFormError] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -70,11 +75,11 @@ export const TeamAdd = (
             control={control}
             render={({ field }) => (
               <Select {...field} label="Parent team">
-                {/*         {teams.map((team) => (
+                {teams.map((team) => (
                   <MenuItem key={team.id} value={team.id}>
                     {team.name}
                   </MenuItem>
-                ))} */}
+                ))}
               </Select>
             )}
           />

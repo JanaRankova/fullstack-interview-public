@@ -15,6 +15,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { styled } from "@mui/material/styles";
 import GroupIcon from "@mui/icons-material/Group";
+import BugReportIcon from '@mui/icons-material/BugReport';
 import { alpha } from "@mui/system/colorManipulator";
 
 const NavItem = styled(ListItemButton)(({ theme }) => ({
@@ -101,6 +102,16 @@ export const SideBar = ({
                   <GroupIcon />
                 </ListItemIcon>
                 <ListItemText primary="Týmy" />
+              </NavItem>
+            </Link>
+          </StyledListItem>
+          <StyledListItem>
+            <Link href="/test" passHref>
+              <NavItem>
+                <ListItemIcon>
+                  <BugReportIcon />
+                </ListItemIcon>
+                <ListItemText primary="Tests" />
               </NavItem>
             </Link>
           </StyledListItem>

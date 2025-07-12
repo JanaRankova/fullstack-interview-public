@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.dependencies import employee_service_factory, verify_token
 from src.models.employee import EmployeeService
@@ -16,9 +16,10 @@ class EmployeeBaseSchema(BaseModel):
 class EmployeeResponseSchema(EmployeeBaseSchema):
     id: str
     created_at: datetime
+    end_date: datetime | None
+    team_id: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EmployeeCreateSchema(EmployeeBaseSchema):
