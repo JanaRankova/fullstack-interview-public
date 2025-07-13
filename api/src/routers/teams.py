@@ -47,7 +47,6 @@ async def list_teams(
 ):
     return team_service.read_all_with_children_and_employees(employee_service)
 
-
 @router.post(
     "",
     dependencies=[Depends(verify_token)],
@@ -59,6 +58,16 @@ async def create_team(
 ):
     return team_service.create(**data.model_dump())
 
+@router.get(
+    "/flatTeams",
+    dependencies=[Depends(verify_token)],
+    operation_id="flat_team_list",
+    response_model=list[TeamResponseWithEmployeesSchema],
+)
+async def flat_list_teams(
+    team_service: TeamService = Depends(team_service_factory),
+):
+    return team_service.read_all()
 
 @router.get(
     "/{team_id}",

@@ -10,7 +10,7 @@ from src.database import Base
 class Employee(Base):
     __tablename__ = "employee"
 
-    id = Column(String, primary_key=True, default=str(uuid.uuid4))
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable=False)
     surname = Column(String, nullable=False)
     position = Column(String, nullable=False)

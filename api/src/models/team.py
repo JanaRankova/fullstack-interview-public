@@ -9,7 +9,7 @@ from src.database import Base
 class Team(Base):
     __tablename__ = "team"
 
-    id = Column(String, primary_key=True, default=str(uuid.uuid4))
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable=False)
     parent_team_id = Column(String, ForeignKey("team.id"), nullable=True)
     parent_team = relationship("Team", remote_side=[id], back_populates="child_teams")
@@ -33,8 +33,7 @@ class TeamService:
         return self.session.execute(text(query)).fetchone()
 
     def read_all(self):
-        query = select(self.model)
-        return self.session.scalars(query).all()
+        return self.session.scalars(select(self.model)).all()
 
     def read_all_with_children_and_employees(self, employee_service):
         teams = self.read_all()

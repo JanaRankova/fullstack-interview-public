@@ -105,16 +105,6 @@ export const SideBar = ({
               </NavItem>
             </Link>
           </StyledListItem>
-          <StyledListItem>
-            <Link href="/test" passHref>
-              <NavItem>
-                <ListItemIcon>
-                  <BugReportIcon />
-                </ListItemIcon>
-                <ListItemText primary="Tests" />
-              </NavItem>
-            </Link>
-          </StyledListItem>
         </List>
       </Drawer>
     </Box>
