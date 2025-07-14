@@ -18,16 +18,17 @@ import EmployeeRow from './EmployeeRow'
 
 interface Props {
 	team: Team
+	isNested: boolean
 	checked: boolean
 	collapsed: boolean
 	checkedEmployees: string[]
+	onCollapseToggle: (id: string) => void
 	onEmployeesCheck: (ids: string[]) => void
 	onTeamCheck: (id: string) => void
+	onEmployeeDelete: (id: string) => void
 }
 
-export default function TeamRow({team, checked, checkedEmployees, collapsed, onTeamCheck}: Props) {
-
-	const [isOpen, setOpen] = React.useState(false)
+export default function TeamRow({team, isNested, checked, checkedEmployees, collapsed, onTeamCheck, onEmployeeDelete, onCollapseToggle}: Props) {
 
 	const handleEmployeeCheck = (ids: string[]) => {
 		// if (checkEmplyees.includes(id)) {
@@ -45,26 +46,19 @@ export default function TeamRow({team, checked, checkedEmployees, collapsed, onT
 	)
 	const employeeLabels = ['Name', 'Surname', 'Position', 'Team']
 
-	const groupCheckbox =
-	<Checkbox
-		checked={false/* checkedTeams.length === teams.length */}
-		indeterminate={false/* checkedTeams.length !== 0 && checkedTeams.length < teams.length */}
-		onChange={() => {}/* handleTeamsCheck */}
-	/>
-
-	const transparentCell = <TableCell sx={{backgroundColor: '#f5f5f5'}}/>
-
 	return (
 		<React.Fragment>
 			<TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
 				<TableCell padding="checkbox">
-					<IconButton
-						aria-label="expand row"
-						size="small"
-						onClick={() => setOpen(!isOpen)}
-					>
-						{isOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-					</IconButton>
+					{isNested ? null : (
+						<IconButton
+							aria-label="expand row"
+							size="small"
+							onClick={() => onCollapseToggle(team.id)}
+						>
+							{!collapsed ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+						</IconButton>
+					)}
 				</TableCell>
 				<TableCell padding={'checkbox'}>
 					<Checkbox
@@ -95,10 +89,18 @@ export default function TeamRow({team, checked, checkedEmployees, collapsed, onT
 											{employeeLabels.map((label) => (
 												<TableCell key={label} align="left" sx={{ color: 'white' }} children={label} />
 											))}
+											<TableCell/>
 										</TableRow>
 									</TableHead>
 									<TableBody>
-										{team.employees.map((employee) => <EmployeeRow key={employee.id} employee={employee} checked={false} onEmployeeCheck={handleEmployeeCheck}/>)}
+										{team.employees.map((employee) => (
+										<EmployeeRow
+											key={employee.id}
+											employee={employee}
+											checked={false}
+											onDelete={() => onEmployeeDelete(employee.id)}
+											onEmployeeCheck={() => handleEmployeeCheck([])} />
+										))}
 									</TableBody>
 								</Table>
 							</Box>}
@@ -122,11 +124,14 @@ export default function TeamRow({team, checked, checkedEmployees, collapsed, onT
 											<TeamRow
 												key={childTeam.id}
 												team={childTeam}
+												isNested={true}
 												checked={false}
 												collapsed={false}
 												checkedEmployees={[]}
+												onCollapseToggle={onCollapseToggle}
 												onEmployeesCheck={([]) => {}}
 												onTeamCheck={() => {}}
+												onEmployeeDelete={onEmployeeDelete}
 											/>
 										)))}
 									</TableBody>

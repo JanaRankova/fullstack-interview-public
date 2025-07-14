@@ -83,5 +83,15 @@ async def update_employee(employee_id):
     dependencies=[Depends(verify_token)],
     operation_id="delete_employee",
 )
-async def delete_employee(employee_id):
-    pass
+async def delete_employee(
+    employee_id: str,
+    service: EmployeeService = Depends(employee_service_factory)):
+    employee = service.get_by_id(employee_id)
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found"
+        )
+
+    service.delete(employee)
+    return {"message": "Employee deleted successfully"}

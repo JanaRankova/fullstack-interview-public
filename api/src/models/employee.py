@@ -49,5 +49,10 @@ class EmployeeService:
     def update(self):
         pass
 
-    def delete(self):
-        pass
+    def get_by_id(self, employee_id: str):
+        return self.session.get(Employee, employee_id)
+
+    def delete(self, employee_id: str):
+        employee = self.session.get(Employee, employee_id)
+        self.session.delete(employee)
+        self.session.commit()

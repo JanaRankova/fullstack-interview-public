@@ -22,7 +22,7 @@ import { Team } from '@/types'
 const schema = yup.object().shape({
 	name: yup.string().required("Name is required"),
 	surname: yup.string().required("Surname is required"),
-	team: yup.string(),
+	team: yup.string().required("Team is required"),
 	position: yup.string(),
 	startDate: yup.date(),
 	endDate: yup
