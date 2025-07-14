@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 
-import * as React from 'react'
 import Link from 'next/link'
-import { Box, Container, Typography, Stack, Button} from '@mui/material'
-import Collapse from '@mui/material/Collapse'
+import { Box, Container, Typography, Stack, Button } from '@mui/material'
 import IconButton from '@mui/material/IconButton'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -15,22 +13,14 @@ import { Checkbox } from '@mui/material'
 import Paper from '@mui/material/Paper'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
-import { Suspense } from 'react'
 import { Team } from '@/types'
 import TeamRow from '../../components/table/TeamRow'
 
-interface Props {
 
-}
-
-
-
-export default function Teams({
-
-}: Props) {
+export default function Teams() {
 	const [teams, setTeams] = useState<Team[]>([])
 	const [isLoading, setIsLoading] = useState(true)
-	const [checkedTeams, setCheckedTeams] = useState<string[]>([])
+	const [checkedTeams, setCheckedTeams] = useState<Set<string>>(new Set())
 	const [checkedEmplyees, setCheckedEmployees] = useState<string[]>([])
 	const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
@@ -46,49 +36,97 @@ export default function Teams({
 			.catch((error) => console.error(error))
 	}, [])
 
-	const handleTeamsCheck = () => {
-		if (checkedTeams.length === teams.length) {
-			setCheckedTeams([])
-		} else {
-			// If no or only partial checked select all.
-			setCheckedTeams(teams.map((team) => team.id))
+	const updateCheckedState = (
+		teams: Team[],
+		checkedIds: Set<string>,
+		targetId: string,
+		checked: boolean
+	): Set<string> => {
+		const newChecked = new Set(checkedIds)
+
+		const toggleRecursive = (team: Team) => {
+			if (checked) {
+				newChecked.add(team.id)
+			} else {
+				newChecked.delete(team.id)
+			}
+
+			team.employees.forEach(emp =>
+				checked ? newChecked.add(emp.id) : newChecked.delete(emp.id)
+			)
+
+			team.child_teams.forEach(child => toggleRecursive(child))
 		}
+
+		const findAndToggle = (teams: Team[]) => {
+			for (const team of teams) {
+				if (team.id === targetId) {
+					toggleRecursive(team)
+					break
+				} else if (team.child_teams.length > 0) {
+					findAndToggle(team.child_teams)
+				}
+			}
+		}
+
+		findAndToggle(teams)
+
+		return newChecked
 	}
 
-	const handleEmployeesCheck = () => {
-		if (checkedEmplyees.length === teams.length) {
-			setCheckedTeams([])
-		} else {
-			// If no or only partial checked select all.
-			setCheckedTeams(teams.map((team) => team.id))
+	const getAllIds = (teams: Team[]): string[] => {
+		const ids: string[] = []
+
+		const traverse = (teamList: Team[]) => {
+			teamList.forEach(team => {
+				ids.push(team.id)
+				team.employees.forEach(emp => ids.push(emp.id))
+				traverse(team.child_teams)
+			})
 		}
+
+		traverse(teams)
+		return ids
 	}
 
-
-	const handleTeamCheck = (id: string) => {
-		if (checkedTeams.includes(id)) {
-			setCheckedTeams((prev) => prev.filter((id) => !prev.includes(id)))
+	const handleSelectAll = (checked: boolean) => {
+		if (checked) {
+			const allIds = getAllIds(teams)
+			setCheckedTeams(new Set(allIds))
 		} else {
-			setCheckedTeams((prev) => [...prev, id])
+			setCheckedTeams(new Set())
 		}
+	};
+
+	const handleTeamCheckbox = (teamId: string, checked: boolean) => {
+		setCheckedTeams(prev =>
+			updateCheckedState(teams, prev, teamId, checked)
+		)
 	}
 
 	const removeEmployeeById = (teams: Team[], employeeId: string): Team[] => {
 
 		return teams.map((team) => {
 			const filteredEmployees = team.employees?.filter(
-			(emp) => emp.id !== employeeId
-		) || []
+				(emp) => emp.id !== employeeId
+			) || []
 
-		// Recursively clean child teams
-		const filteredChildTeams = removeEmployeeById(team.child_teams || [], employeeId)
+			const filteredChildTeams = removeEmployeeById(team.child_teams || [], employeeId)
 
 			return {
 				...team,
 				employees: filteredEmployees,
 				child_teams: filteredChildTeams,
-			}
-		})
+		}})
+	}
+
+	const removeTeamById = (teams: Team[], teamId: string): Team[] => {
+		return teams
+			.filter((team) => team.id !== teamId)
+			.map((team) => ({
+				...team,
+				child_teams: removeTeamById(team.child_teams || [], teamId)
+			}))
 	}
 
 	const handleEmployeeDelete = async (id: string) => {
@@ -97,11 +135,22 @@ export default function Teams({
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: 'Bearer mysecrettoken123',
-			},
+			}
 		})
 
-		// Remove employee from state after successful deletion
 		setTeams((prev)  => removeEmployeeById(prev, id))
+	}
+
+	const handleTeamDelete = async (id: string) => {
+		await fetch(`http://localhost:8000/teams/${id}`, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: 'Bearer mysecrettoken123',
+			}
+		})
+
+		setTeams((prev)  => removeTeamById(prev, id))
 	}
 
 	const toggleTeamCollapse = (teamId: string) => {
@@ -159,12 +208,13 @@ export default function Teams({
 								</TableCell>
 								<TableCell padding={'checkbox'} sx={{ width: '40px', maxWidth: '40px', color: 'white' }}>
 									<Checkbox
-										checked={checkedTeams.length === teams.length}
-										indeterminate={checkedTeams.length !== 0 && checkedTeams.length < teams.length}
-										onChange={handleTeamsCheck}
+										checked={checkedTeams.size === getAllIds(teams).length && getAllIds(teams).length > 0}
+										indeterminate={checkedTeams.size > 0 && checkedTeams.size < getAllIds(teams).length}
+										onChange={(event) => handleSelectAll(event.target.checked)}
 									/>
 								</TableCell>
 								<TableCell align="left" sx={{ color: 'white' }}>Team name</TableCell>
+								<TableCell/>
 							</TableRow>
 						</TableHead>
 						<TableBody>
@@ -173,12 +223,13 @@ export default function Teams({
 									key={team.id}
 									team={team}
 									isNested={false}
-									checked={checkedTeams.includes(team.id)}
+									checked={checkedTeams.has(team.id)}
 									collapsed={collapsed[team.id]}
 									checkedEmployees={checkedEmplyees}
 									onCollapseToggle={toggleTeamCollapse}
-									onTeamCheck={handleTeamCheck}
-									onEmployeesCheck={handleEmployeesCheck}
+									onTeamCheck={handleTeamCheckbox}
+									onTeamDelete={handleTeamDelete}
+									onEmployeesCheck={() => {}}
 									onEmployeeDelete={handleEmployeeDelete}
 								/>
 							))}

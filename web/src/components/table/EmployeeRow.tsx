@@ -15,7 +15,7 @@ interface Props {
 export default function EmployeeRow({employee, checked, onEmployeeCheck, onDelete}: Props) {
 	const checkbox = <Checkbox
 		checked={checked}
-		onChange={() => onEmployeeCheck(/* employee.id */)}
+		onChange={() => onEmployeeCheck()}
 	/>
 	const employeeData = [employee.name, employee.surname, employee.position, employee.team_id] //rewrite team_id to team_name
 

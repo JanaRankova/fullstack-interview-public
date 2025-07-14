@@ -65,5 +65,9 @@ class TeamService:
     def update(self):
         pass
 
-    def delete(self):
-        pass
+    def get_team_by_id(self, team_id: str) -> Team | None:
+        return self.session.get(Team, team_id)
+
+    def delete(self, team: Team):
+        self.session.delete(team)
+        self.session.commit()

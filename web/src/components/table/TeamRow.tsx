@@ -1,19 +1,9 @@
-import * as React from 'react'
-import Box from '@mui/material/Box'
-import Collapse from '@mui/material/Collapse'
-import IconButton from '@mui/material/IconButton'
-import { Checkbox } from '@mui/material'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
-import Typography from '@mui/material/Typography'
-import Paper from '@mui/material/Paper'
+import { Team } from '@/types'
+import Delete from '@mui/icons-material/Clear'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
-import { Team } from '@/types'
+import { Box, Checkbox, Collapse, IconButton, Table, TableBody, TableCell,TableHead, TableRow } from '@mui/material'
+import * as React from 'react'
 import EmployeeRow from './EmployeeRow'
 
 interface Props {
@@ -22,20 +12,17 @@ interface Props {
 	checked: boolean
 	collapsed: boolean
 	checkedEmployees: string[]
+	//checkedTeams: Set<string>
 	onCollapseToggle: (id: string) => void
 	onEmployeesCheck: (ids: string[]) => void
-	onTeamCheck: (id: string) => void
+	onTeamCheck: (teamId: string, checked: boolean) => void
+	onTeamDelete: (id: string) => void
 	onEmployeeDelete: (id: string) => void
 }
 
-export default function TeamRow({team, isNested, checked, checkedEmployees, collapsed, onTeamCheck, onEmployeeDelete, onCollapseToggle}: Props) {
+export default function TeamRow({team, isNested, checked, checkedEmployees, collapsed, onTeamCheck, onEmployeeDelete, onCollapseToggle, onTeamDelete}: Props) {
 
 	const handleEmployeeCheck = (ids: string[]) => {
-		// if (checkEmplyees.includes(id)) {
-		// 	setChecked((prev) => prev.filter((id) => !prev.includes(id)))
-		// } else {
-		// 	setChecked((prev) => [...prev, id])
-		// }
 	}
 	const employeeCheckbox = (ids: string[]) => (
 		<Checkbox
@@ -44,6 +31,13 @@ export default function TeamRow({team, isNested, checked, checkedEmployees, coll
 			onChange={() => handleEmployeeCheck(ids)}
 		/>
 	)
+
+	//const isChecked = checkedTeams.has(team.id)
+
+	const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		onTeamCheck(team.id, e.target.checked)
+	}
+
 	const employeeLabels = ['Name', 'Surname', 'Position', 'Team']
 
 	return (
@@ -63,17 +57,26 @@ export default function TeamRow({team, isNested, checked, checkedEmployees, coll
 				<TableCell padding={'checkbox'}>
 					<Checkbox
 						checked={checked}
-						onChange={() => onTeamCheck(team.id)}
+						onChange={(event) => onTeamCheck(team.id, event.target.checked)}
 					/>
 				</TableCell>
 				<TableCell component="th" scope="row">
 					{team.name}
 				</TableCell>
+				<TableCell padding="checkbox"  sx={{ width: '40px', maxWidth: '40px' }}>
+					<IconButton
+						size="small"
+						title='Delete employee'
+						onClick={() => onTeamDelete(team.id)}
+					>
+						{<Delete/>}
+					</IconButton>
+				</TableCell>
 			</TableRow>
 
 			{(team.employees.length > 0 || team.child_teams.length > 0) ?
 				<TableRow>
-					<TableCell colSpan={3} sx={{ paddingBottom: 0, paddingTop: 0, paddingRight: 0, paddingLeft: '44px'}}>
+					<TableCell colSpan={4} sx={{ paddingBottom: 0, paddingTop: 0, paddingRight: 0, paddingLeft: '44px'}}>
 						<Collapse in={!collapsed} timeout="auto" unmountOnExit>
 							{team.employees.length > 0 && <Box>
 								<Table sx={{borderBottom: '1px solid #cccccc'}}>
@@ -113,10 +116,11 @@ export default function TeamRow({team, isNested, checked, checkedEmployees, coll
 											<TableCell padding={'checkbox'}>
 												<Checkbox
 													checked={checked}
-													onChange={() => onTeamCheck(team.id)}
+													onChange={(event) => onTeamCheck(team.id, event.target.checked)}
 												/>
 											</TableCell>
 											<TableCell align="left" sx={{ color: 'white' }} children={'Team name'} />
+											<TableCell/>
 										</TableRow>
 									</TableHead>
 									<TableBody>
@@ -128,9 +132,11 @@ export default function TeamRow({team, isNested, checked, checkedEmployees, coll
 												checked={false}
 												collapsed={false}
 												checkedEmployees={[]}
+												//checkedTeams={checkedTeams}
 												onCollapseToggle={onCollapseToggle}
 												onEmployeesCheck={([]) => {}}
-												onTeamCheck={() => {}}
+												onTeamCheck={onTeamCheck}
+												onTeamDelete={() => onTeamDelete(childTeam.id)}
 												onEmployeeDelete={onEmployeeDelete}
 											/>
 										)))}

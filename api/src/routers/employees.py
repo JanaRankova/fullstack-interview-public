@@ -81,17 +81,16 @@ async def update_employee(employee_id):
 @router.delete(
     "/{employee_id}",
     dependencies=[Depends(verify_token)],
+    status_code=status.HTTP_204_NO_CONTENT,
     operation_id="delete_employee",
 )
-async def delete_employee(
+async def delete(
     employee_id: str,
-    service: EmployeeService = Depends(employee_service_factory)):
-    employee = service.get_by_id(employee_id)
+    employee_service: EmployeeService = Depends(employee_service_factory),
+):
+    employee = employee_service.get_employee_by_id(employee_id)
     if not employee:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Employee not found"
-        )
+        raise HTTPException(status_code=404, detail="Employee not found")
 
-    service.delete(employee)
-    return {"message": "Employee deleted successfully"}
+    employee_service.delete(employee)
+    return

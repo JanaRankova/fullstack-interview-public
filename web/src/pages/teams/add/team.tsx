@@ -1,6 +1,5 @@
-import { Controller, useForm } from "react-hook-form";
-import AddIcon from "@mui/icons-material/Add";
-import Link from 'next/link';
+import { Controller, useForm } from "react-hook-form"
+import Link from 'next/link'
 import {
   FormControl,
   InputLabel,
@@ -11,15 +10,15 @@ import {
   Button,
   Box,
   Stack,
-} from "@mui/material";
+} from "@mui/material"
 import { useRouter } from 'next/router'
-import { useState, useEffect } from "react";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { FormFieldError } from "../../../components/forms/FormFieldError";
-import { FormSuccess } from "../../../components/forms/FormSuccess";
-import { FormError } from "../../../components/forms/FormError";
-import { Team } from '@/types';
+import { useState, useEffect } from "react"
+import { yupResolver } from "@hookform/resolvers/yup"
+import * as yup from "yup"
+import { FormFieldError } from "../../../components/forms/FormFieldError"
+import { FormSuccess } from "../../../components/forms/FormSuccess"
+import { FormError } from "../../../components/forms/FormError"
+import { Team } from '@/types'
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -28,8 +27,8 @@ const schema = yup.object().shape({
 
 
 export default function TeamAdd() {
-	const [formError, setFormError] = useState(false);
-	const [success, setSuccess] = useState(false);
+	const [formError, setFormError] = useState(false)
+	const [success, setSuccess] = useState(false)
 	const [teams, setTeams] = useState<Team[] | null>(null)
 	const [isLoading, setLoading] = useState(true)
 	useEffect(() => {
@@ -51,7 +50,7 @@ export default function TeamAdd() {
 		reset,
 		handleSubmit,
 		formState: { errors },
-	} = useForm({ resolver: yupResolver(schema) });
+	} = useForm({ resolver: yupResolver(schema) })
 
 	const onSubmit = handleSubmit(async (formData) => {
 		console.log(formData)
@@ -131,5 +130,5 @@ export default function TeamAdd() {
 		  {success && <FormSuccess text="Team Added" />}
 		</form>
 	 </Box>
-  );
-};
+  )
+}
